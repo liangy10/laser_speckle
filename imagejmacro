@@ -1,0 +1,52 @@
+//***********************************************
+//By Yajie Liang, University of Maryland School of Medicine, modified from code by Dr. Kalchenko (see below), 20hz frame rate, 9-10s
+//Computation of LS image from raw LS image stack.
+// Laser Speckle Imaging
+// Integration = 20 frames
+// LS Plugin v1.04 Feb 2014
+// Vyacheslav (Slava) Kalchenko, MD, PhD, FRM
+// In Vivo Optical Imaging Unit                       
+// Department of Veterinary Resources    
+// Weizmann Institute of Science                       
+// email: a.kalchenko@weizmann.ac.il                
+//***********************************************
+name = getTitle;
+Raw=getImageID();
+setBatchMode(true); 
+run("Grouped Z Project...", "projection=[Standard Deviation] group=20");
+Sd=getImageID();
+selectImage(Raw);
+run("Grouped Z Project...", "projection=[Average Intensity] group=20");
+Mean=getImageID();
+//selectImage(Raw);
+//close();
+imageCalculator("Divide create 32-bit stack", Sd, Mean);//
+Rstack=getImageID();selectImage(Rstack);
+run("Z Project...", "start=1 stop=1000 projection=[Average Intensity]");
+Result1=getImageID();
+selectImage(Rstack);
+close();
+selectImage(Mean);
+close();
+selectImage(Sd);
+close();
+selectImage(Result1);
+//rename ("LSI" + "_" + name);
+setBatchMode(false); 
+//annotation
+run("physics");
+run("Invert LUT");
+run("Calibration Bar...", "location=[Upper Right] fill=White label=Black number=5 decimal=0 font=12 zoom=3");
+run("Duplicate...", " ");
+setTool("rectangle");
+makeRectangle(1161, 42, 48, 402);
+run("Crop");
+run("Rotate 90 Degrees Left");
+Result2=getTitle();//not get ImageID, that will return a number
+selectImage(Result1);//should not use SelectWindow
+run("Add Image...", "image=&Result2 x=20 y=900 opacity=100");
+setTool("text");
+setFont("SansSerif", 36, " antialiased");
+setColor("#070707");
+Overlay.drawString("Low                       High perfusion", 30, 863, 0.0);
+Overlay.show();
